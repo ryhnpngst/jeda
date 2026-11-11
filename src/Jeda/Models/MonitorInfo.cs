@@ -23,9 +23,7 @@ public sealed class MonitorInfo
     public string Role => IsPrimary ? "Utama" : "Eksternal";
     public string Orientation => Width >= Height ? "Landscape" : "Portrait";
 
-    public string DisplayTitle => IsPrimary
-        ? $"Monitor {Index} [Utama] – {Resolution} (Posisi: {X}, {Y})"
-        : $"Monitor {Index} [Eksternal] – {Resolution} (Posisi: {X}, {Y})";
+    public string DisplayTitle => $"Monitor {Index}";
 
     public override string ToString() => DisplayTitle;
 }

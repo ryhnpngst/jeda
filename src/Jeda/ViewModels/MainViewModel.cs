@@ -77,12 +77,12 @@ public sealed class MainViewModel : ViewModelBase, IDisposable
     public bool HasSelectedMonitor => SelectedMonitor != null;
 
     public string SelectedMonitorDetails => SelectedMonitor != null
-        ? $"{SelectedMonitor.FriendlyName} • {SelectedMonitor.Resolution} • Posisi: {SelectedMonitor.Position} • {SelectedMonitor.Orientation}"
+        ? SelectedMonitor.DisplayTitle
         : "Tidak ada monitor yang dipilih";
 
     public string MonitorSummary => Monitors.Count == 1
-        ? "1 Monitor terdeteksi (Hanya layar utama)"
-        : $"{Monitors.Count} Monitor terdeteksi (Mode presentasi aktif)";
+        ? "1 Monitor terdeteksi"
+        : $"{Monitors.Count} Monitor terdeteksi";
 
     public AppStatus Status
     {
