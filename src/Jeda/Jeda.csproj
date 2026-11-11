@@ -12,6 +12,10 @@
     <Version>1.0.0</Version>
     <Product>JEDA – Desktop Presentation Utility</Product>
     <Description>Pause the Screen, Keep Working.</Description>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ServerGarbageCollection>false</ServerGarbageCollection>
+    <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
   </PropertyGroup>
 
   <ItemGroup>

@@ -31,7 +31,7 @@ public sealed class DisplayTopologyService : IDisplayTopologyService
             byte[] paths = new byte[pathCount * 72];
             byte[] modes = new byte[modeCount * 64];
 
-            err = NativeMethods.QueryDisplayConfig(
+            var queryResult = NativeMethods.QueryDisplayConfig(
                 NativeMethods.QDC_DATABASE_CURRENT,
                 ref pathCount,
                 paths,
@@ -39,7 +39,7 @@ public sealed class DisplayTopologyService : IDisplayTopologyService
                 modes,
                 out uint topology);
 
-            if (err == 0)
+            if (queryResult == QueryDisplayConfigResult.Success)
             {
                 return topology switch
                 {

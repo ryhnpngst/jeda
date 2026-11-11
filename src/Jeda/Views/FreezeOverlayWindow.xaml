@@ -6,14 +6,17 @@
         ShowInTaskbar="False"
         ShowActivated="False"
         Focusable="False"
-        Topmost="True"
+        IsHitTestVisible="False"
+        Topmost="False"
         WindowState="Normal"
         WindowStartupLocation="Manual"
         Background="Black"
         Title="JEDA Freeze Overlay">
-    <Grid>
+    <Grid Background="Black" IsHitTestVisible="False">
         <Image x:Name="OverlayImage"
-               Stretch="Fill"
+               Stretch="Uniform"
+               HorizontalAlignment="Center"
+               VerticalAlignment="Center"
                Focusable="False"
                IsHitTestVisible="False"
                RenderOptions.BitmapScalingMode="HighQuality" />

@@ -1,18 +1,20 @@
 using System.Windows;
 using Jeda.Models;
 using Jeda.Services.Interfaces;
+using Jeda.Utilities;
 using Jeda.Views;
 
 namespace Jeda.Services;
 
 /// <summary>
-/// Orchestrates display topology, live mirroring, and freeze/resume operations (FR-00, FR-03, FR-04).
+/// Orchestrates display topology, live mirroring, window relocation, and freeze/resume operations (FR-00, FR-03, FR-04).
 /// </summary>
 public sealed class FreezeService : IFreezeService
 {
     private readonly IMonitorService _monitorService;
     private readonly IScreenCaptureService _screenCaptureService;
     private readonly IDisplayTopologyService _topologyService;
+    private readonly WindowRelocationService _relocationService = new();
     private readonly object _lock = new();
 
     private FreezeOverlayWindow? _overlayWindow;
@@ -64,6 +66,7 @@ public sealed class FreezeService : IFreezeService
 
     /// <summary>
     /// Freezes the target monitor by pausing live mirroring on the current frame (FR-03).
+    /// Protects the primary display so applications (like Chrome) are never blocked.
     /// </summary>
     public void Freeze(MonitorInfo targetMonitor)
     {
@@ -73,21 +76,51 @@ public sealed class FreezeService : IFreezeService
         {
             if (_isFrozen) return;
 
+            // Enforce presentation safety: Never freeze the primary laptop display
+            var resolvedTarget = targetMonitor;
+            if (resolvedTarget.IsPrimary)
+            {
+                var external = _monitorService.GetAllMonitors().FirstOrDefault(m => !m.IsPrimary);
+                if (external != null)
+                {
+                    resolvedTarget = external;
+                }
+                else
+                {
+                    // If in Clone mode, ensure Extend mode is applied
+                    _topologyService.SwitchToExtend();
+                    System.Threading.Thread.Sleep(500);
+                    external = _monitorService.GetAllMonitors().FirstOrDefault(m => !m.IsPrimary);
+                    if (external != null)
+                    {
+                        resolvedTarget = external;
+                    }
+                }
+            }
+
+            var primary = _monitorService.GetPrimaryMonitor() ?? resolvedTarget;
+
             var dispatcher = Application.Current?.Dispatcher;
             if (dispatcher != null && !dispatcher.CheckAccess())
             {
-                dispatcher.Invoke(() => FreezeInternal(targetMonitor));
+                dispatcher.Invoke(() => FreezeInternal(resolvedTarget));
             }
             else
             {
-                FreezeInternal(targetMonitor);
+                FreezeInternal(resolvedTarget);
+            }
+
+            // Start window relocator: If Chrome or any app opens, ensure it appears on the primary laptop screen
+            if (_overlayWindow != null)
+            {
+                _relocationService.StartMonitoring(resolvedTarget, primary, _overlayWindow.Handle);
             }
 
             _isFrozen = true;
-            _currentFrozenMonitor = targetMonitor;
+            _currentFrozenMonitor = resolvedTarget;
         }
 
-        OnStateChanged(true, targetMonitor);
+        OnStateChanged(true, _currentFrozenMonitor);
     }
 
     /// <summary>
@@ -98,6 +131,8 @@ public sealed class FreezeService : IFreezeService
         lock (_lock)
         {
             if (!_isFrozen) return;
+
+            _relocationService.StopMonitoring();
 
             var dispatcher = Application.Current?.Dispatcher;
             if (dispatcher != null && !dispatcher.CheckAccess())
@@ -182,8 +217,10 @@ public sealed class FreezeService : IFreezeService
 
     private void CloseOverlay()
     {
+        _relocationService.StopMonitoring();
         _overlayWindow?.CloseOverlay();
         _overlayWindow = null;
+        MemoryOptimizer.TrimWorkingSet();
     }
 
     private void OnDisplayConfigurationChanged(object? sender, EventArgs e)
@@ -217,6 +254,7 @@ public sealed class FreezeService : IFreezeService
         if (_disposed) return;
         _disposed = true;
 
+        _relocationService.Dispose();
         _monitorService.DisplayConfigurationChanged -= OnDisplayConfigurationChanged;
 
         var dispatcher = Application.Current?.Dispatcher;
