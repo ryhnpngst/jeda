@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:Jeda.ViewModels"
         Title="JEDA – Pause the Screen, Keep Working"
+        Icon="../Assets/app.ico"
         Height="320" Width="680"
         MinHeight="300" MinWidth="650"
         WindowStartupLocation="CenterScreen"
@@ -94,17 +95,31 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <!-- Header -->
-        <StackPanel Grid.Row="0" Margin="0,0,0,16">
-            <TextBlock Text="JEDA"
-                       FontSize="26"
-                       FontWeight="Bold"
-                       Foreground="#0F172A" />
-            <TextBlock Text="Pause the Screen, Keep Working."
-                       FontSize="14"
-                       Foreground="#64748B"
-                       Margin="0,2,0,0" />
-        </StackPanel>
+        <!-- Header with Brand Icon -->
+        <Grid Grid.Row="0" Margin="0,0,0,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <Image Grid.Column="0"
+                   Source="../Assets/jeda-icon.png"
+                   Width="40" Height="40"
+                   Margin="0,0,12,0"
+                   VerticalAlignment="Center"
+                   RenderOptions.BitmapScalingMode="HighQuality" />
+
+            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                <TextBlock Text="JEDA"
+                           FontSize="24"
+                           FontWeight="Bold"
+                           Foreground="#0F172A" />
+                <TextBlock Text="Pause the Screen, Keep Working."
+                           FontSize="13"
+                           Foreground="#64748B"
+                           Margin="0,1,0,0" />
+            </StackPanel>
+        </Grid>
 
         <!-- Status Card (FR-08) -->
         <Border Grid.Row="1" Style="{StaticResource CardBorder}">

@@ -121,20 +121,37 @@ public sealed class TrayService : IDisposable
         using (var g = Graphics.FromImage(bmp))
         {
             g.SmoothingMode = SmoothingMode.AntiAlias;
+            g.PixelOffsetMode = PixelOffsetMode.HighQuality;
 
-            // Background circle
-            using var bgBrush = new SolidBrush(bgColor);
-            g.FillEllipse(bgBrush, 2, 2, 28, 28);
-
-            // Play / Resume triangle pointing right in white
-            using var whiteBrush = new SolidBrush(Color.White);
-            var points = new[]
+            // Background circle with theme color (Blue)
+            using (var bgBrush = new SolidBrush(bgColor))
             {
-                new PointF(12, 9),
-                new PointF(12, 23),
-                new PointF(23, 16)
-            };
-            g.FillPolygon(whiteBrush, points);
+                g.FillEllipse(bgBrush, 1.5f, 1.5f, 29f, 29f);
+            }
+
+            // Monitor casing and stand in White (matching jeda-icon)
+            using (var pen = new Pen(Color.White, 1.8f))
+            {
+                using var path = GetRoundedRect(new RectangleF(6f, 6f, 20f, 13f), 2f);
+                g.DrawPath(pen, path);
+
+                // Stand neck
+                g.DrawLine(pen, 16f, 19f, 16f, 23f);
+                // Stand base
+                g.DrawLine(pen, 11f, 23f, 21f, 23f);
+            }
+
+            // Play / Resume triangle inside the monitor screen
+            using (var whiteBrush = new SolidBrush(Color.White))
+            {
+                var points = new[]
+                {
+                    new PointF(14f, 9.5f),
+                    new PointF(14f, 15.5f),
+                    new PointF(19.5f, 12.5f)
+                };
+                g.FillPolygon(whiteBrush, points);
+            }
         }
 
         IntPtr hIcon = bmp.GetHicon();
@@ -155,15 +172,32 @@ public sealed class TrayService : IDisposable
         using (var g = Graphics.FromImage(bmp))
         {
             g.SmoothingMode = SmoothingMode.AntiAlias;
+            g.PixelOffsetMode = PixelOffsetMode.HighQuality;
 
-            // Background circle
-            using var bgBrush = new SolidBrush(bgColor);
-            g.FillEllipse(bgBrush, 2, 2, 28, 28);
+            // Background circle with theme color (Red)
+            using (var bgBrush = new SolidBrush(bgColor))
+            {
+                g.FillEllipse(bgBrush, 1.5f, 1.5f, 29f, 29f);
+            }
 
-            // Pause indicator bars in white
-            using var whiteBrush = new SolidBrush(Color.White);
-            g.FillRectangle(whiteBrush, 10, 9, 4, 14);
-            g.FillRectangle(whiteBrush, 18, 9, 4, 14);
+            // Monitor casing and stand in White (matching jeda-icon)
+            using (var pen = new Pen(Color.White, 1.8f))
+            {
+                using var path = GetRoundedRect(new RectangleF(6f, 6f, 20f, 13f), 2f);
+                g.DrawPath(pen, path);
+
+                // Stand neck
+                g.DrawLine(pen, 16f, 19f, 16f, 23f);
+                // Stand base
+                g.DrawLine(pen, 11f, 23f, 21f, 23f);
+            }
+
+            // Pause bars inside the monitor screen
+            using (var whiteBrush = new SolidBrush(Color.White))
+            {
+                g.FillRectangle(whiteBrush, 13f, 9.5f, 2f, 6f);
+                g.FillRectangle(whiteBrush, 17f, 9.5f, 2f, 6f);
+            }
         }
 
         IntPtr hIcon = bmp.GetHicon();
@@ -176,6 +210,18 @@ public sealed class TrayService : IDisposable
         {
             NativeMethods.DestroyIcon(hIcon);
         }
+    }
+
+    private static GraphicsPath GetRoundedRect(RectangleF bounds, float radius)
+    {
+        var path = new GraphicsPath();
+        float d = radius * 2;
+        path.AddArc(bounds.X, bounds.Y, d, d, 180, 90);
+        path.AddArc(bounds.Right - d, bounds.Y, d, d, 270, 90);
+        path.AddArc(bounds.Right - d, bounds.Bottom - d, d, d, 0, 90);
+        path.AddArc(bounds.X, bounds.Bottom - d, d, d, 90, 90);
+        path.CloseFigure();
+        return path;
     }
 
     public void Dispose()
