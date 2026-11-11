@@ -4,6 +4,8 @@
         WindowStyle="None"
         ResizeMode="NoResize"
         ShowInTaskbar="False"
+        ShowActivated="False"
+        Focusable="False"
         Topmost="True"
         WindowState="Normal"
         WindowStartupLocation="Manual"
@@ -13,7 +15,7 @@
         <Image x:Name="OverlayImage"
                Stretch="Fill"
                Focusable="False"
-               IsHitTestVisible="False" />
+               IsHitTestVisible="False"
+               RenderOptions.BitmapScalingMode="HighQuality" />
     </Grid>
 </Window>
-

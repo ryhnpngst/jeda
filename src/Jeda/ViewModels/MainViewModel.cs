@@ -8,7 +8,7 @@ using Jeda.Services.Interfaces;
 namespace Jeda.ViewModels;
 
 /// <summary>
-/// Main ViewModel driving the primary user interface and coordinating monitor state and actions (FR-01, FR-06).
+/// Main ViewModel driving the primary user interface and coordinating monitor state and actions (FR-00, FR-01, FR-06, FR-03, FR-04).
 /// </summary>
 public sealed class MainViewModel : ViewModelBase, IDisposable
 {
@@ -20,7 +20,21 @@ public sealed class MainViewModel : ViewModelBase, IDisposable
     private bool _isFrozen;
     private bool _disposed;
 
-    public MainViewModel() : this(new MonitorService(), null)
+    public MainViewModel() : this(CreateDefaultServices())
+    {
+    }
+
+    private static (IMonitorService Monitor, IFreezeService Freeze) CreateDefaultServices()
+    {
+        var monitorService = new MonitorService();
+        var captureService = new ScreenCaptureService();
+        var topologyService = new DisplayTopologyService();
+        var freezeService = new FreezeService(monitorService, captureService, topologyService);
+        return (monitorService, freezeService);
+    }
+
+    private MainViewModel((IMonitorService Monitor, IFreezeService Freeze) services)
+        : this(services.Monitor, services.Freeze)
     {
     }
 
@@ -68,7 +82,7 @@ public sealed class MainViewModel : ViewModelBase, IDisposable
 
     public string MonitorSummary => Monitors.Count == 1
         ? "1 Monitor terdeteksi (Hanya layar utama)"
-        : $"{Monitors.Count} Monitor terdeteksi (Siap untuk mode presentasi)";
+        : $"{Monitors.Count} Monitor terdeteksi (Mode presentasi aktif)";
 
     public AppStatus Status
     {
@@ -107,7 +121,6 @@ public sealed class MainViewModel : ViewModelBase, IDisposable
             Monitors.Add(monitor);
         }
 
-        // Preserve previous selection if it still exists, else pick default external/presentation target
         SelectedMonitor = Monitors.FirstOrDefault(m => m.DeviceName == previousDeviceName)
                           ?? _monitorService.GetDefaultTargetMonitor()
                           ?? Monitors.FirstOrDefault();
@@ -124,7 +137,6 @@ public sealed class MainViewModel : ViewModelBase, IDisposable
 
     private void OnDisplayConfigurationChanged(object? sender, EventArgs e)
     {
-        // Ensure UI collection update is marshalled to WPF Dispatcher
         if (Application.Current?.Dispatcher != null && !Application.Current.Dispatcher.CheckAccess())
         {
             Application.Current.Dispatcher.Invoke(RefreshMonitors);
@@ -141,21 +153,33 @@ public sealed class MainViewModel : ViewModelBase, IDisposable
     {
         if (SelectedMonitor == null) return;
 
-        if (_freezeService != null)
+        try
         {
-            _freezeService.Toggle(SelectedMonitor);
+            if (_freezeService != null)
+            {
+                _freezeService.Toggle(SelectedMonitor);
+            }
         }
-        else
+        catch (Exception ex)
         {
-            // Simulation placeholder until M4 is implemented
-            IsFrozen = !IsFrozen;
-            Status = IsFrozen
-                ? AppStatus.Frozen(SelectedMonitor.DisplayTitle)
-                : AppStatus.Ready();
+            Status = AppStatus.Error("Gagal membekukan layar", ex.Message);
         }
     }
 
     private void OnFreezeStateChanged(object? sender, FreezeStateChangedEventArgs e)
+    {
+        var dispatcher = Application.Current?.Dispatcher;
+        if (dispatcher != null && !dispatcher.CheckAccess())
+        {
+            dispatcher.Invoke(() => UpdateStateFromEvent(e));
+        }
+        else
+        {
+            UpdateStateFromEvent(e);
+        }
+    }
+
+    private void UpdateStateFromEvent(FreezeStateChangedEventArgs e)
     {
         IsFrozen = e.IsFrozen;
         Status = e.IsFrozen && e.TargetMonitor != null
@@ -170,5 +194,11 @@ public sealed class MainViewModel : ViewModelBase, IDisposable
 
         _monitorService.DisplayConfigurationChanged -= OnDisplayConfigurationChanged;
         _monitorService.Dispose();
+
+        if (_freezeService != null)
+        {
+            _freezeService.StateChanged -= OnFreezeStateChanged;
+            _freezeService.Dispose();
+        }
     }
 }

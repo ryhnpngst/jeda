@@ -11,7 +11,7 @@ public sealed class FreezeStateChangedEventArgs : EventArgs
 /// <summary>
 /// Service interface for orchestrating Freeze and Resume operations (FR-03, FR-04).
 /// </summary>
-public interface IFreezeService
+public interface IFreezeService : IDisposable
 {
     /// <summary>
     /// Indicates whether a screen is currently frozen.
@@ -43,4 +43,3 @@ public interface IFreezeService
     /// </summary>
     void Toggle(MonitorInfo? targetMonitor = null);
 }
-
