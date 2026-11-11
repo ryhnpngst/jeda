@@ -6,7 +6,7 @@
 #define MyAppName "JEDA"
 #define MyAppVersion "1.0.0"
 #define MyAppPublisher "JEDA Open Source"
-#define MyAppURL "https://github.com/username/jeda"
+#define MyAppURL "https://github.com/ryhnpngst/jeda"
 #define MyAppExeName "Jeda.exe"
 
 [Setup]

@@ -23,4 +23,4 @@ SYSTEM REQUIREMENTS:
 - .NET 10 Desktop Runtime
 
 ========================================================================
-Dokumentasi lengkap & Source Code: https://github.com/username/jeda
+Dokumentasi lengkap & Source Code: https://github.com/ryhnpngst/jeda

@@ -85,14 +85,14 @@ Versi stabil terbaru: **v1.0.0**
 
 | Paket Distribusi | Tipe | Deskripsi | Unduh |
 |---|---|---|:---:|
-| **JEDA Portable** | `.zip` | Siap pakai tanpa instalasi. Cukup ekstrak dan jalankan `Jeda.exe`. | [Unduh Portable v1.0.0](release/Jeda-v1.0.0-Portable-win-x64.zip) |
-| **JEDA Installer** | `.zip` | Paket pemasang otomatis. Dilengkapi `Setup.bat` untuk membuat pintasan di Desktop & Start Menu. | [Unduh Installer v1.0.0](release/Jeda-v1.0.0-Installer-win-x64.zip) |
+| **JEDA Portable** | `.zip` | Siap pakai tanpa instalasi. Cukup ekstrak dan jalankan `Jeda.exe`. | [Unduh Portable v1.0.0](https://github.com/ryhnpngst/jeda/releases/download/v1.0.0/Jeda-v1.0.0-Portable-win-x64.zip) |
+| **JEDA Installer** | `.zip` | Paket pemasang otomatis. Dilengkapi `Setup.bat` untuk membuat pintasan di Desktop & Start Menu. | [Unduh Installer v1.0.0](https://github.com/ryhnpngst/jeda/releases/download/v1.0.0/Jeda-v1.0.0-Installer-win-x64.zip) |
 | **Inno Setup Script** | `.iss` | Skrip instalasi resmi Inno Setup 6 untuk membangun installer kustom. | [Lihat Skrip](installer/JedaSetup.iss) |
 
 ### Verifikasi Keaslian Berkas (Checksums SHA-256)
 ```text
-6688bdabe43f78e3cf6072f6b5a01a54298c1f173bcfc393676312ec8c975959  Jeda-v1.0.0-Portable-win-x64.zip
-7699a062764564589a096cc9b78cd82b74d566041f37d9745d8f8994e482203e  Jeda-v1.0.0-Installer-win-x64.zip
+9d032213ec7c5aeaaa8e193553d70be08493313c31032c7d33ade14920a20da3  Jeda-v1.0.0-Portable-win-x64.zip
+a6ecab6a53155a64a8ff37c4efe0268713081bc38ee0e0e81ecbcea732f85b70  Jeda-v1.0.0-Installer-win-x64.zip
 ```
 
 ---
@@ -143,7 +143,7 @@ Jika Anda ingin mengompilasi JEDA sendiri dari source code:
 
 2. **Clone repositori:**
    ```powershell
-   git clone https://github.com/username/jeda.git
+   git clone https://github.com/ryhnpngst/jeda.git
    cd jeda
    ```
 
