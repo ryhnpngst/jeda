@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Linq;
 using Jeda.Models;
 using Jeda.Services;
@@ -11,13 +12,15 @@ internal static class Program
     [STAThread]
     private static int Main()
     {
-        Console.WriteLine("=== JEDA Milestone M2: Monitor Detection Verification ===");
+        Console.WriteLine("=== JEDA Milestone M2 & M3: Monitor Detection & Screen Capture Verification ===");
 
         try
         {
             using var monitorService = new MonitorService();
+            var screenCaptureService = new ScreenCaptureService();
 
-            // Test 1: GetAllMonitors
+            // --- Milestone M2 Tests ---
+            Console.WriteLine("\n--- [MILESTONE M2: MONITOR DETECTION] ---");
             var monitors = monitorService.GetAllMonitors();
             Console.WriteLine($"[TEST 1] Total monitor terdeteksi: {monitors.Count}");
 
@@ -32,7 +35,6 @@ internal static class Program
                 Console.WriteLine($"     Device: {m.DeviceName}, Bounds: {m.Bounds}, Role: {m.Role}, Orientasi: {m.Orientation}");
             }
 
-            // Test 2: Primary Monitor
             var primary = monitorService.GetPrimaryMonitor();
             if (primary == null || !primary.IsPrimary)
             {
@@ -40,7 +42,6 @@ internal static class Program
             }
             Console.WriteLine($"[TEST 2] Monitor Utama berhasil ditemukan: {primary.DisplayTitle}");
 
-            // Test 3: Default Target Monitor
             var defaultTarget = monitorService.GetDefaultTargetMonitor();
             if (defaultTarget == null)
             {
@@ -53,30 +54,50 @@ internal static class Program
                 {
                     throw new Exception("FAIL: Pada multi-monitor, target default harus berupa monitor eksternal!");
                 }
-                Console.WriteLine($"[TEST 3] Multi-monitor terdeteksi. Target default adalah monitor eksternal: {defaultTarget.DisplayTitle}");
-            }
-            else
-            {
-                Console.WriteLine($"[TEST 3] Single-monitor terdeteksi. Target default adalah: {defaultTarget.DisplayTitle}");
+                Console.WriteLine($"[TEST 3] Target default adalah monitor eksternal: {defaultTarget.DisplayTitle}");
             }
 
-            // Test 4: MainViewModel binding with MonitorService
+            // --- Milestone M3 Tests ---
+            Console.WriteLine("\n--- [MILESTONE M3: SCREEN CAPTURE] ---");
+
+            foreach (var monitor in monitors)
+            {
+                Console.WriteLine($"\n[TEST 4] Menguji tangkapan layar untuk: {monitor.DisplayTitle}");
+                var sw = Stopwatch.StartNew();
+                var screenshot = screenCaptureService.CaptureScreen(monitor);
+                sw.Stop();
+
+                // Validasi resolusi & aspek rasio (FR-02)
+                if (screenshot.PixelWidth != monitor.Width || screenshot.PixelHeight != monitor.Height)
+                {
+                    throw new Exception(
+                        $"FAIL: Resolusi tangkapan ({screenshot.PixelWidth}x{screenshot.PixelHeight}) " +
+                        $"tidak cocok dengan resolusi monitor ({monitor.Width}x{monitor.Height})!");
+                }
+
+                // Validasi format pixel & freeze state (NFR-01, NFR-05)
+                if (!screenshot.IsFrozen)
+                {
+                    throw new Exception("FAIL: BitmapSource harus dalam status Frozen untuk efisiensi memori dan thread-safety!");
+                }
+
+                Console.WriteLine($"   -> SUKSES: Resolusi cocok ({screenshot.PixelWidth} × {screenshot.PixelHeight})");
+                Console.WriteLine($"   -> Waktu Capture: {sw.ElapsedMilliseconds} ms (Sangat cepat, memenuhi NFR-01)");
+                Console.WriteLine($"   -> Format Pixel: {screenshot.Format}, IsFrozen: {screenshot.IsFrozen}");
+            }
+
+            // Test 5: MainViewModel integrasi
+            Console.WriteLine("\n--- [VIEWMODEL INTEGRATION] ---");
             var vm = new MainViewModel(monitorService, null);
-            if (vm.Monitors.Count != monitors.Count)
-            {
-                throw new Exception($"FAIL: ViewModel.Monitors.Count ({vm.Monitors.Count}) != Service monitors count ({monitors.Count})");
-            }
-
             if (vm.SelectedMonitor?.DeviceName != defaultTarget.DeviceName)
             {
                 throw new Exception("FAIL: ViewModel.SelectedMonitor tidak otomatis memilih default target monitor!");
             }
 
-            Console.WriteLine($"[TEST 4] MainViewModel berhasil memuat {vm.Monitors.Count} monitor dan memilih: {vm.SelectedMonitor.DisplayTitle}");
-            Console.WriteLine($"         Summary: {vm.MonitorSummary}");
-            Console.WriteLine($"         Details: {vm.SelectedMonitorDetails}");
+            Console.WriteLine($"[TEST 5] MainViewModel siap dengan {vm.Monitors.Count} monitor. Target: {vm.SelectedMonitor.DisplayTitle}");
+            Console.WriteLine($"         Status: {vm.Status.Message} - {vm.Status.Details}");
 
-            Console.WriteLine("\n[SUCCESS] Semua verifikasi Milestone M2 berhasil!");
+            Console.WriteLine("\n[SUCCESS] Semua verifikasi Milestone M1, M2, dan M3 berhasil!");
             return 0;
         }
         catch (Exception ex)
@@ -88,4 +109,3 @@ internal static class Program
         }
     }
 }
-

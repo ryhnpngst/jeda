@@ -1,3 +1,4 @@
+using System.Drawing;
 using System.Windows.Media.Imaging;
 using Jeda.Models;
 
@@ -13,5 +14,9 @@ public interface IScreenCaptureService
     /// Does not write files to disk (NFR-05 Privacy).
     /// </summary>
     BitmapSource CaptureScreen(MonitorInfo monitor);
-}
 
+    /// <summary>
+    /// Captures an arbitrary screen rectangle in virtual desktop coordinates.
+    /// </summary>
+    BitmapSource CaptureBounds(Rectangle bounds);
+}
