@@ -71,6 +71,17 @@ internal static class Program
             Console.WriteLine($"   -> Setelah Resume: {vm.Status.Message}, Tombol: '{vm.ActionButtonText}'");
             if (vm.IsFrozen) throw new Exception("FAIL: ViewModel harus kembali Ready!");
 
+            // 5. TrayService Test (M6)
+            using (var tray = new TrayService(
+                () => { },
+                () => { },
+                () => { }))
+            {
+                tray.UpdateState(true, "Monitor 2");
+                tray.UpdateState(false);
+            }
+            Console.WriteLine("[TEST 5] TrayService (M6): Berhasil dibuat, diperbarui (Freeze/Resume), dan dibersihkan.");
+
             Console.WriteLine("\n[SUCCESS] SEMUA VERIFIKASI ALUR KERJA BARU BERHASIL!");
             return 0;
         }
