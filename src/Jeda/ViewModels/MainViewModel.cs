@@ -1,29 +1,32 @@
 using System.Collections.ObjectModel;
+using System.Windows;
 using System.Windows.Input;
 using Jeda.Models;
+using Jeda.Services;
 using Jeda.Services.Interfaces;
 
 namespace Jeda.ViewModels;
 
 /// <summary>
-/// Main ViewModel driving the primary user interface and coordinating monitor state and actions.
+/// Main ViewModel driving the primary user interface and coordinating monitor state and actions (FR-01, FR-06).
 /// </summary>
-public sealed class MainViewModel : ViewModelBase
+public sealed class MainViewModel : ViewModelBase, IDisposable
 {
-    private readonly IMonitorService? _monitorService;
+    private readonly IMonitorService _monitorService;
     private readonly IFreezeService? _freezeService;
 
     private MonitorInfo? _selectedMonitor;
     private AppStatus _status = AppStatus.Ready();
     private bool _isFrozen;
+    private bool _disposed;
 
-    public MainViewModel() : this(null, null)
+    public MainViewModel() : this(new MonitorService(), null)
     {
     }
 
-    public MainViewModel(IMonitorService? monitorService, IFreezeService? freezeService)
+    public MainViewModel(IMonitorService monitorService, IFreezeService? freezeService)
     {
-        _monitorService = monitorService;
+        _monitorService = monitorService ?? throw new ArgumentNullException(nameof(monitorService));
         _freezeService = freezeService;
 
         Monitors = new ObservableCollection<MonitorInfo>();
@@ -36,10 +39,7 @@ public sealed class MainViewModel : ViewModelBase
             _freezeService.StateChanged += OnFreezeStateChanged;
         }
 
-        if (_monitorService != null)
-        {
-            _monitorService.DisplayConfigurationChanged += (_, _) => RefreshMonitors();
-        }
+        _monitorService.DisplayConfigurationChanged += OnDisplayConfigurationChanged;
 
         RefreshMonitors();
     }
@@ -53,10 +53,22 @@ public sealed class MainViewModel : ViewModelBase
         {
             if (SetProperty(ref _selectedMonitor, value))
             {
+                OnPropertyChanged(nameof(HasSelectedMonitor));
+                OnPropertyChanged(nameof(SelectedMonitorDetails));
                 (ToggleFreezeCommand as RelayCommand)?.RaiseCanExecuteChanged();
             }
         }
     }
+
+    public bool HasSelectedMonitor => SelectedMonitor != null;
+
+    public string SelectedMonitorDetails => SelectedMonitor != null
+        ? $"{SelectedMonitor.FriendlyName} • {SelectedMonitor.Resolution} • Posisi: {SelectedMonitor.Position} • {SelectedMonitor.Orientation}"
+        : "Tidak ada monitor yang dipilih";
+
+    public string MonitorSummary => Monitors.Count == 1
+        ? "1 Monitor terdeteksi (Hanya layar utama)"
+        : $"{Monitors.Count} Monitor terdeteksi (Siap untuk mode presentasi)";
 
     public AppStatus Status
     {
@@ -86,35 +98,40 @@ public sealed class MainViewModel : ViewModelBase
 
     public void RefreshMonitors()
     {
+        var previousDeviceName = _selectedMonitor?.DeviceName;
         Monitors.Clear();
 
-        if (_monitorService != null)
+        var detected = _monitorService.GetAllMonitors();
+        foreach (var monitor in detected)
         {
-            foreach (var monitor in _monitorService.GetAllMonitors())
-            {
-                Monitors.Add(monitor);
-            }
-            SelectedMonitor = _monitorService.GetDefaultTargetMonitor() ?? Monitors.FirstOrDefault();
+            Monitors.Add(monitor);
         }
-        else
-        {
-            // Placeholder fallback for M1 milestone when services are not yet plugged in
-            var fallback = new MonitorInfo
-            {
-                Index = 1,
-                DeviceName = @"\\.\DISPLAY1",
-                FriendlyName = "Monitor 1 (Internal Display)",
-                Bounds = new System.Drawing.Rectangle(0, 0, 1920, 1080),
-                WorkingArea = new System.Drawing.Rectangle(0, 0, 1920, 1040),
-                IsPrimary = true
-            };
-            Monitors.Add(fallback);
-            SelectedMonitor = fallback;
-        }
+
+        // Preserve previous selection if it still exists, else pick default external/presentation target
+        SelectedMonitor = Monitors.FirstOrDefault(m => m.DeviceName == previousDeviceName)
+                          ?? _monitorService.GetDefaultTargetMonitor()
+                          ?? Monitors.FirstOrDefault();
+
+        OnPropertyChanged(nameof(MonitorSummary));
 
         if (!IsFrozen)
         {
-            Status = AppStatus.Ready();
+            Status = Monitors.Count > 0
+                ? AppStatus.Ready()
+                : AppStatus.Error("Tidak ada monitor yang terdeteksi.");
+        }
+    }
+
+    private void OnDisplayConfigurationChanged(object? sender, EventArgs e)
+    {
+        // Ensure UI collection update is marshalled to WPF Dispatcher
+        if (Application.Current?.Dispatcher != null && !Application.Current.Dispatcher.CheckAccess())
+        {
+            Application.Current.Dispatcher.Invoke(RefreshMonitors);
+        }
+        else
+        {
+            RefreshMonitors();
         }
     }
 
@@ -130,7 +147,7 @@ public sealed class MainViewModel : ViewModelBase
         }
         else
         {
-            // Simulation for M1 milestone verification
+            // Simulation placeholder until M4 is implemented
             IsFrozen = !IsFrozen;
             Status = IsFrozen
                 ? AppStatus.Frozen(SelectedMonitor.DisplayTitle)
@@ -145,5 +162,13 @@ public sealed class MainViewModel : ViewModelBase
             ? AppStatus.Frozen(e.TargetMonitor.DisplayTitle)
             : AppStatus.Ready();
     }
-}
 
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _disposed = true;
+
+        _monitorService.DisplayConfigurationChanged -= OnDisplayConfigurationChanged;
+        _monitorService.Dispose();
+    }
+}

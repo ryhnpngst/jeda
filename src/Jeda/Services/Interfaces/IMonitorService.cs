@@ -5,10 +5,10 @@ namespace Jeda.Services.Interfaces;
 /// <summary>
 /// Service interface for detecting and managing connected monitors (FR-01, FR-06).
 /// </summary>
-public interface IMonitorService
+public interface IMonitorService : IDisposable
 {
     /// <summary>
-    /// Returns all currently connected display monitors.
+    /// Returns all currently connected display monitors with resolution and position.
     /// </summary>
     IReadOnlyList<MonitorInfo> GetAllMonitors();
 
@@ -27,4 +27,3 @@ public interface IMonitorService
     /// </summary>
     event EventHandler? DisplayConfigurationChanged;
 }
-

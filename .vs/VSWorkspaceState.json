@@ -1,7 +1,9 @@
 {
   "ExpandedNodes": [
-    ""
+    "",
+    "\\src",
+    "\\src\\Jeda"
   ],
-  "SelectedNode": "\\.gitattributes",
+  "SelectedNode": "\\src\\Jeda\\Jeda.csproj",
   "PreviewInSolutionExplorer": false
 }
