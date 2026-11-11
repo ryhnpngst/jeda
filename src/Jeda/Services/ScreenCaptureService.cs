@@ -4,7 +4,6 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Jeda.Models;
 using Jeda.Services.Interfaces;
-using Color = System.Drawing.Color;
 using PixelFormat = System.Drawing.Imaging.PixelFormat;
 
 namespace Jeda.Services;

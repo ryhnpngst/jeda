@@ -68,17 +68,12 @@ public sealed class MainViewModel : ViewModelBase, IDisposable
             if (SetProperty(ref _selectedMonitor, value))
             {
                 OnPropertyChanged(nameof(HasSelectedMonitor));
-                OnPropertyChanged(nameof(SelectedMonitorDetails));
                 (ToggleFreezeCommand as RelayCommand)?.RaiseCanExecuteChanged();
             }
         }
     }
 
     public bool HasSelectedMonitor => SelectedMonitor != null;
-
-    public string SelectedMonitorDetails => SelectedMonitor != null
-        ? SelectedMonitor.DisplayTitle
-        : "Tidak ada monitor yang dipilih";
 
     public string MonitorSummary => Monitors.Count == 1
         ? "1 Monitor terdeteksi"

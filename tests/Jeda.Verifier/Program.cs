@@ -14,7 +14,7 @@ internal static class Program
     [STAThread]
     private static int Main()
     {
-        Console.WriteLine("=== JEDA Comprehensive Verification (M1 - M4 + Auto Topology & Live Mirroring) ===");
+        Console.WriteLine("=== JEDA Comprehensive Verification Suite (Milestone M7 Testing & Validation) ===");
 
         try
         {
@@ -82,7 +82,32 @@ internal static class Program
             }
             Console.WriteLine("[TEST 5] TrayService (M6): Berhasil dibuat, diperbarui (Freeze/Resume), dan dibersihkan.");
 
-            Console.WriteLine("\n[SUCCESS] SEMUA VERIFIKASI ALUR KERJA BARU BERHASIL!");
+            // 6. ScreenCaptureService Direct Capture Test (M3 & FR-02)
+            var capturedBitmap = screenCaptureService.CaptureScreen(defaultTarget);
+            if (capturedBitmap == null || !capturedBitmap.IsFrozen)
+            {
+                throw new Exception("FAIL: Hasil tangkapan layar harus valid dan ter-freeze!");
+            }
+            Console.WriteLine($"[TEST 6] ScreenCaptureService (M3): Berhasil menangkap layar {capturedBitmap.PixelWidth}x{capturedBitmap.PixelHeight} (Format: {capturedBitmap.Format}).");
+
+            // 7. Repeated Freeze & Resume Stress Test (NFR-02 Reliability)
+            Console.WriteLine("[TEST 7] Stress Test (NFR-02): Menjalankan 10 siklus Freeze/Resume berturut-turut...");
+            for (int cycle = 1; cycle <= 10; cycle++)
+            {
+                freezeService.Freeze(defaultTarget);
+                if (!freezeService.IsFrozen) throw new Exception($"FAIL pada siklus {cycle}: Freeze gagal!");
+                freezeService.Resume();
+                if (freezeService.IsFrozen) throw new Exception($"FAIL pada siklus {cycle}: Resume gagal!");
+            }
+            Console.WriteLine("   -> SUKSES: 10 siklus Freeze/Resume selesai tanpa crash atau kebocoran status.");
+
+            // 8. Memory Management Test (NFR-01)
+            Jeda.Utilities.MemoryOptimizer.TrimWorkingSet();
+            Console.WriteLine("[TEST 8] MemoryOptimizer (NFR-01): Berhasil memicu Garbage Collection dan flush working set.");
+
+            Console.WriteLine("\n========================================================");
+            Console.WriteLine("=== SEMUA PENGUJIAN MILESTONE M7 BERHASIL DILALUI!   ===");
+            Console.WriteLine("========================================================");
             return 0;
         }
         catch (Exception ex)
