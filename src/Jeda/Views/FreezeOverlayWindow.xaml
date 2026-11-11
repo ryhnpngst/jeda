@@ -1,0 +1,19 @@
+<Window x:Class="Jeda.Views.FreezeOverlayWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        WindowStyle="None"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        Topmost="True"
+        WindowState="Normal"
+        WindowStartupLocation="Manual"
+        Background="Black"
+        Title="JEDA Freeze Overlay">
+    <Grid>
+        <Image x:Name="OverlayImage"
+               Stretch="Fill"
+               Focusable="False"
+               IsHitTestVisible="False" />
+    </Grid>
+</Window>
+
